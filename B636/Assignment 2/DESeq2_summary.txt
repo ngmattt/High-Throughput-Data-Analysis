@@ -1,0 +1,29 @@
+Summary: Mock vs SARS-CoV-2
+
+out of 20143 with nonzero total read count
+adjusted p-value < 0.1
+LFC > 0 (up)       : 40, 0.2%
+LFC < 0 (down)     : 25, 0.12%
+outliers [1]       : 2, 0.0099%
+low counts [2]     : 16584, 82%
+(mean count < 3)
+[1] see 'cooksCutoff' argument of ?results
+[2] see 'independentFiltering' argument of ?results
+
+
+Number of significant DEGs (padj < 0.05): 47 
+
+Summary: 24H vs 72H
+
+out of 20143 with nonzero total read count
+adjusted p-value < 0.1
+LFC > 0 (up)       : 114, 0.57%
+LFC < 0 (down)     : 137, 0.68%
+outliers [1]       : 2, 0.0099%
+low counts [2]     : 15548, 77%
+(mean count < 2)
+[1] see 'cooksCutoff' argument of ?results
+[2] see 'independentFiltering' argument of ?results
+
+
+Number of significant DEGs (padj < 0.05): 139 

@@ -1,0 +1,179 @@
+---
+title: "Assignment_2"
+author: "Matthew Ng"
+date: "2025-10-31"
+output: pdf_document
+---
+
+```{r}
+# Load libraries
+library(DESeq2)
+library(ggplot2)
+library(dplyr)
+library(pheatmap)
+library(clusterProfiler)
+library(org.Hs.eg.db)
+```
+
+```{r}
+# 1. Read in count data
+countData <- read.delim("/Users/matthewng/Downloads/gene_counts.txt", comment.char = "#")
+rownames(countData) <- countData$Geneid
+countData <- countData[,7:ncol(countData)]  # keep only sample columns
+
+# 2. Read sample metadata
+colData <- read.csv("/Users/matthewng/Downloads/assignment_2_info.csv", stringsAsFactors = TRUE)
+
+# Match sample order
+colnames(countData) <- colData$SRA.Accession
+
+# Check
+head(colData)
+head(countData[,1:3])
+```
+
+
+```{r}
+# Clean up Condition and Time.Point columns
+colData$Condition <- trimws(as.character(colData$Condition))  # remove trailing spaces
+colData$Condition <- factor(colData$Condition, levels = c("Mock", "SARS-CoV-2"))
+
+# Convert Time.Point numeric → factor with "H" suffix
+colData$Time.Point <- paste0(colData$Time.Point, "H")
+colData$Time.Point <- factor(colData$Time.Point, levels = c("24H", "72H"))
+
+# Verify the structure again
+str(colData)
+table(colData$Condition)
+table(colData$Time.Point)
+```
+
+
+```{r}
+# Create DESeq dataset
+dds <- DESeqDataSetFromMatrix(countData = round(countData),
+                              colData = colData,
+                              design = ~ Condition + Time.Point)
+
+# Run DESeq normalization & modeling
+dds <- DESeq(dds)
+resultsNames(dds)
+
+# SARS-CoV-2 vs Mock
+res1 <- results(dds, name = "Condition_SARS.CoV.2_vs_Mock", alpha = 0.05)
+
+# Sort by adjusted p-value
+res1 <- res1[order(res1$padj), ]
+
+# Filter for significant DEGs: padj < 0.05 and |log2FC| ≥ 1
+sig_res1 <- subset(res1, padj < 0.05 & abs(log2FoldChange) >= 1)
+
+# Save results
+write.csv(as.data.frame(res1),
+          "DEG_Mock_vs_SARS-CoV-2_all.csv",
+          row.names = TRUE)
+
+write.csv(as.data.frame(sig_res1),
+          "DEG_Mock_vs_SARS-CoV-2_sig_padj0.05_LFC1.csv",
+          row.names = TRUE)
+
+# Print summary
+cat("Summary: Mock vs SARS-CoV-2\n")
+summary(res1)
+cat("\nNumber of significant DEGs:", nrow(sig_res1), "\n\n")
+
+# SARS-CoV-2 24H vs 72H
+
+if ("Time.Point_72H_vs_24H" %in% resultsNames(dds)) {
+  res2 <- results(dds, name = "Time.Point_72H_vs_24H", alpha = 0.05)
+} else {
+  res2 <- results(dds, contrast = c("Time.Point", "72H", "24H"), alpha = 0.05)
+}
+
+# Sort and filter
+res2 <- res2[order(res2$padj), ]
+sig_res2 <- subset(res2, padj < 0.05 & abs(log2FoldChange) >= 1)
+
+# Save results
+write.csv(as.data.frame(res2),
+          "DEG_SARS-CoV-2_24h_vs_72h_all.csv",
+          row.names = TRUE)
+
+write.csv(as.data.frame(sig_res2),
+          "DEG_SARS-CoV-2_24h_vs_72h_sig_padj0.05_LFC1.csv",
+          row.names = TRUE)
+
+# Print summary
+cat("Summary: 24H vs 72H\n")
+summary(res2)
+cat("\nNumber of significant DEGs:", nrow(sig_res2), "\n")
+
+```
+
+
+```{r}
+# Prepare significant gene lists
+
+sig_res1 <- res1[which(res1$padj < 0.05 & !is.na(res1$padj)), ]
+sig_res2 <- res2[which(res2$padj < 0.05 & !is.na(res2$padj)), ]
+
+genes1 <- gsub("\\..*", "", rownames(sig_res1)) 
+genes2 <- gsub("\\..*", "", rownames(sig_res2))
+
+cat("Significant DEGs:\n")
+cat("Mock vs SARS-CoV-2:", length(genes1), "\n")
+cat("24H vs 72H:", length(genes2), "\n")
+
+# Map Ensembl → Entrez IDs
+
+genes1_map <- bitr(genes1, fromType = "ENSEMBL", toType = "ENTREZID", OrgDb = org.Hs.eg.db)
+genes2_map <- bitr(genes2, fromType = "ENSEMBL", toType = "ENTREZID", OrgDb = org.Hs.eg.db)
+
+cat("\nMapped successfully:\n")
+cat("SARS-CoV-2 vs Mock:", nrow(genes1_map), "mapped out of", length(genes1), "\n")
+cat("SARS-CoV-2 24H vs 72H:", nrow(genes2_map), "mapped out of", length(genes2), "\n")
+
+
+# Run GO enrichment
+
+ego1 <- enrichGO(
+  gene = genes1_map$ENTREZID,
+  OrgDb = org.Hs.eg.db,
+  keyType = "ENTREZID",
+  ont = "CC",
+  pAdjustMethod = "BH",
+  pvalueCutoff = 0.05,
+  readable = TRUE
+)
+
+ego2 <- enrichGO(
+  gene = genes2_map$ENTREZID,
+  OrgDb = org.Hs.eg.db,
+  keyType = "ENTREZID",
+  ont = "BP",
+  pAdjustMethod = "BH",
+  pvalueCutoff = 0.05,
+  readable = TRUE
+)
+
+# Save results and visualize
+
+write.csv(as.data.frame(ego1), "GO_Mock_vs_SARS-CoV-2.csv", row.names = FALSE)
+write.csv(as.data.frame(ego2), "GO_24H_vs_72H.csv", row.names = FALSE)
+
+# Top categories
+library(enrichplot)
+dotplot(ego1, showCategory = 15, title = "GO Enrichment: Mock vs SARS-CoV-2")
+dotplot(ego2, showCategory = 11, title = "GO Enrichment: 24H vs 72H")
+
+
+```
+
+
+```{r}
+ego1
+ego2
+```
+
+
+
