@@ -1,0 +1,35 @@
+K-mer 41 results:
+Number of contigs: 316
+Total length (bp): 4756813
+N50: 67950
+---
+K-mer 51 results:
+Number of contigs: 261
+Total length (bp): 4763624
+N50: 92070
+---
+K-mer 61 results:
+Number of contigs: 255
+Total length (bp): 4771103
+N50: 94426
+---
+K-mer 71 results:
+Number of contigs: 256
+Total length (bp): 4779838
+N50: 112548
+---
+K-mer 81 results:
+Number of contigs: 239
+Total length (bp): 4784685
+N50: 118766
+---
+K-mer 91 results:
+Number of contigs: 227
+Total length (bp): 4786706
+N50: 112588
+---
+K-mer 101 results:
+Number of contigs: 285
+Total length (bp): 4804038
+N50: 101753
+---

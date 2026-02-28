@@ -1,0 +1,35 @@
+K-mer 41 results:
+Number of transcripts: 502
+Total length (bp): 10618537
+N50: 54116
+---
+K-mer 51 results:
+Number of transcripts: 388
+Total length (bp): 10629778
+N50: 84737
+---
+K-mer 61 results:
+Number of transcripts: 404
+Total length (bp): 12121704
+N50: 143928
+---
+K-mer 71 results:
+Number of transcripts: 400
+Total length (bp): 11852008
+N50: 310285
+---
+K-mer 81 results:
+Number of transcripts: 442
+Total length (bp): 10631981
+N50: 143968
+---
+K-mer 91 results:
+Number of transcripts: 367
+Total length (bp): 12169471
+N50: 553724
+---
+K-mer 101 results:
+Number of transcripts: 595
+Total length (bp): 12636781
+N50: 257507
+---
